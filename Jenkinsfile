@@ -12,11 +12,6 @@ pipeline {
         DB_PASSWORD     = credentials('DB_PASSWORD')
     }
 
-    tools {
-        maven 'Maven'       // must match the name configured in Jenkins → Global Tool Configuration
-        jdk   'Java17'      // must match the name configured in Jenkins → Global Tool Configuration
-    }
-
     triggers {
         // Triggers the pipeline automatically on every GitHub push
         githubPush()
@@ -39,7 +34,7 @@ pipeline {
         // ─────────────────────────────────────────────
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh './mvnw clean package -DskipTests'
             }
         }
 
@@ -48,7 +43,7 @@ pipeline {
         // ─────────────────────────────────────────────
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh './mvnw test'
             }
             post {
                 always {
