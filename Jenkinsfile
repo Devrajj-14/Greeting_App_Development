@@ -24,7 +24,7 @@ pipeline {
         // ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
-                git branch: 'main',
+                git branch: 'master',
                     url: 'https://github.com/Devrajj-14/Greeting_App_Development.git'
             }
         }
