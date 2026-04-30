@@ -4,7 +4,7 @@ pipeline {
     environment {
         JAR_NAME        = 'GreetingApp-0.0.1-SNAPSHOT.jar'
         EC2_USER        = 'ubuntu'
-        EC2_HOST        = '3.108.40.92''
+        EC2_HOST        = '3.108.40.92'
         DEPLOY_DIR      = '/home/ubuntu'
         APP_PORT        = '9090'
         DB_URL          = credentials('DB_URL')
