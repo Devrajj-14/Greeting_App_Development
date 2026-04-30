@@ -32,32 +32,27 @@ pipeline {
                     // Upload the JAR
                     sh "scp -o StrictHostKeyChecking=no target/${JAR_NAME} ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
 
-                    // Start the app using Here-Doc (EOF) for maximum stability
+                    // Start the app - notice there are NO single quotes around EOF now
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
-                            # Kill old process if it exists
-                            pgrep -f ${JAR_NAME} | xargs kill -9 || true
-                            
-                            # Navigate to home
-                            cd ${DEPLOY_DIR}
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << EOF
+                            # Stop old process
+                            pkill -f ${JAR_NAME} || true
+                            sleep 2
 
-                            # Launch with full paths and single quotes for DB credentials
-                            nohup java -jar ${JAR_NAME} \
+                            # Launch the app
+                            nohup java -jar ${DEPLOY_DIR}/${JAR_NAME} \
                                 --server.port=${APP_PORT} \
                                 --spring.datasource.url='${DB_URL}' \
                                 --spring.datasource.username='${DB_USER}' \
                                 --spring.datasource.password='${DB_PASSWORD}' \
-                                > app.log 2>&1 &
+                                > ${DEPLOY_DIR}/app.log 2>&1 &
                             
-                            # Important: small sleep to let the shell detach cleanly
                             sleep 5
 EOF
                     """
                 }
             }
         }
-    }
-
     post {
         success {
             echo "✅ SUCCESS: App is deploying! Check http://${EC2_HOST}:${APP_PORT}/greeting in 30 seconds."
