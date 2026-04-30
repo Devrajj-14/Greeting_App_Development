@@ -34,6 +34,10 @@ pipeline {
         // ─────────────────────────────────────────────
         stage('Build') {
             steps {
+                // Give execute permission to the Maven wrapper first
+                sh 'chmod +x mvnw'
+                
+                // Then build the application
                 sh './mvnw clean package -DskipTests'
             }
         }
