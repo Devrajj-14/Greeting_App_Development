@@ -7,21 +7,17 @@ pipeline {
         EC2_HOST        = '3.108.40.92'
         DEPLOY_DIR      = '/home/ubuntu'
         APP_PORT        = '9090'
+        // Accessing credentials correctly for shell usage
         DB_URL          = credentials('DB_URL')
         DB_USER         = credentials('DB_USER')
         DB_PASSWORD     = credentials('DB_PASSWORD')
     }
 
     triggers {
-        // Triggers the pipeline automatically on every GitHub push
         githubPush()
     }
 
     stages {
-
-        // ─────────────────────────────────────────────
-        // 1. Pull latest code from GitHub
-        // ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 git branch: 'master',
@@ -29,68 +25,45 @@ pipeline {
             }
         }
 
-        // ─────────────────────────────────────────────
-        // 2. Build & package the Spring Boot JAR
-        // ─────────────────────────────────────────────
         stage('Build') {
             steps {
-                // Give execute permission to the Maven wrapper first
                 sh 'chmod +x mvnw'
-                
-                // Then build the application
                 sh './mvnw clean package -DskipTests'
             }
         }
 
-        // ─────────────────────────────────────────────
-        // 3. Copy JAR to EC2 via SCP
-        // ─────────────────────────────────────────────
         stage('Deploy to EC2') {
             steps {
-                // 'ec2-ssh-key' is the Jenkins credential ID for your springboot-key.pem
                 sshagent(credentials: ['ec2-ssh-key']) {
+                    // 1. Copy the JAR file to the server
+                    sh "scp -o StrictHostKeyChecking=no target/${JAR_NAME} ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
 
-                    // Copy the JAR
+                    // 2. Execute the startup sequence as a single quoted string to prevent connection drops
                     sh """
-                        scp -o StrictHostKeyChecking=no \
-                            target/${JAR_NAME} \
-                            ${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/
-                    """
-
-                    // Stop old instance (if running), then start new one
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-                            # Kill any previously running instance of the app
-                            pkill -f "${JAR_NAME}" || true
-
-                            # Wait a moment for the port to free up
-                            sleep 3
-
-                            # Start the app in the background
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "
+                            pkill -f ${JAR_NAME} || true
+                            sleep 2
                             nohup java -jar ${DEPLOY_DIR}/${JAR_NAME} \
                                 --server.port=${APP_PORT} \
-                                --spring.datasource.url=${DB_URL} \
-                                --spring.datasource.username=${DB_USER} \
-                                --spring.datasource.password=${DB_PASSWORD} \
+                                --spring.datasource.url='${DB_URL}' \
+                                --spring.datasource.username='${DB_USER}' \
+                                --spring.datasource.password='${DB_PASSWORD}' \
                                 > ${DEPLOY_DIR}/app.log 2>&1 &
-
-                            echo "App started. Logs at ${DEPLOY_DIR}/app.log"
-                        '
+                            sleep 2
+                            exit
+                        "
                     """
                 }
             }
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Post-pipeline notifications
-    // ─────────────────────────────────────────────
     post {
         success {
-            echo "✅ Pipeline succeeded! App deployed to http://${EC2_HOST}:${APP_PORT}"
+            echo "✅ Pipeline succeeded! App deployed to http://${EC2_HOST}:${APP_PORT}/greeting"
         }
         failure {
-            echo "❌ Pipeline failed. Check the logs above."
+            echo "❌ Pipeline failed. Check the Console Output for errors."
         }
     }
 }
