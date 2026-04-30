@@ -7,10 +7,13 @@ pipeline {
         EC2_HOST        = '3.108.40.92'
         DEPLOY_DIR      = '/home/ubuntu'
         APP_PORT        = '9090'
-        // Securely pulling credentials from Jenkins store
-        DB_URL          = credentials('DB_URL')
-        DB_USER         = credentials('DB_USER')
-        DB_PASSWORD     = credentials('DB_PASSWORD')
+        
+        // Hardcode these to match our successful manual test
+        DB_URL          = 'jdbc:mysql://localhost:3306/greeting_db?allowPublicKeyRetrieval=true'
+        DB_USER         = 'devraj'
+        
+        // Keep pulling the password securely
+        DB_PASSWORD     = credentials('DB_PASSWORD') 
     }
 
     triggers {
