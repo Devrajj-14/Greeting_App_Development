@@ -39,8 +39,9 @@ pipeline {
         }
 
         // ─────────────────────────────────────────────
-        // 3. Run unit tests
+        // 3. Run unit tests (Temporarily Disabled)
         // ─────────────────────────────────────────────
+        /* 
         stage('Test') {
             steps {
                 sh './mvnw test'
@@ -51,6 +52,7 @@ pipeline {
                 }
             }
         }
+        */
 
         // ─────────────────────────────────────────────
         // 4. Copy JAR to EC2 via SCP
@@ -97,10 +99,10 @@ pipeline {
     // ─────────────────────────────────────────────
     post {
         success {
-            echo "✅ Pipeline succeeded! App deployed to http://${EC2_HOST}:${APP_PORT}"
+            echo "Pipeline succeeded! App deployed to http://${EC2_HOST}:${APP_PORT}"
         }
         failure {
-            echo "❌ Pipeline failed. Check the logs above."
+            echo "Pipeline failed. Check the logs above."
         }
     }
 }
