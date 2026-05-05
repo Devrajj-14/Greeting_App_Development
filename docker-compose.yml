@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-
   mysql:
     image: mysql:8.0
     container_name: greeting_mysql
@@ -9,7 +6,8 @@ services:
       MYSQL_ROOT_PASSWORD: Fool@123#
       MYSQL_DATABASE: greeting_db
     ports:
-      - "3306:3306"
+      # Changed host port to 3307 to avoid clashing with your local Ubuntu MySQL
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -24,6 +22,7 @@ services:
     ports:
       - "9090:9090"
     environment:
+      # This correctly points to the 'mysql' service defined above
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/greeting_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: Fool@123#
