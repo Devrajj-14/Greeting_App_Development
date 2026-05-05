@@ -1,0 +1,18 @@
+[Unit]
+Description=Greeting App Docker Compose Service
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/ubuntu/Greeting_App_Development
+ExecStart=/usr/bin/docker compose up -d --build
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=300
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
